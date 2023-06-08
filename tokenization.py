@@ -4,6 +4,7 @@
 import argparse
 import gzip
 import os
+import random
 
 import pandas as pd
 import numpy as np
@@ -31,6 +32,13 @@ Input:
 """
 def read_files(bacteria_dir, phage_dir, method, **kwargs):
   k = kwargs.get('k', None)
+  vocab_dir = kwargs.get('vocab_dir', None)
+
+  # Build model vocabulary if using byte tokenization
+  if method == 'bpe':
+    build_vocab(vocab_dir)  
+
+  # Tokenize all files       
   for filename in os.listdir(bacteria_dir):
     f = os.path.join(bacteria_dir, filename)
     if os.path.isfile(f):
@@ -69,10 +77,6 @@ def tokenize(filepath, label, method, **kwargs):
   # Process data to get sequences of appropriate length 
   df = preprocess_data(filepath, max_length)
   sequences = df['sequence'].values.tolist()
-
-  # Pre-train model if using byte tokenization
-  if method == 'bpe':
-    train_bpe_tokenizer(sequences)           
 
   # Tokenize according to chosen method
   for seq in range(len(sequences)):
@@ -174,25 +178,9 @@ def write_csv(filename, label, df):
     directory = BACTERIA_OUTPUT
   else:
     directory = PHAGE_OUTPUT
-
   # df.to_csv(directory + "/" + filename + '_full.csv', encoding='utf-8', index=False)
   tokenized = df[['tokenized', 'label']]
   tokenized.to_csv(directory + "/" + filename + '_tokenized.csv', encoding='utf-8', index=False, header=False, sep='\t')
-
-
-## Select pretraining data
-
-def select_pretraining():
-  for filename in os.listdir(BACTERIA_OUTPUT):
-     f = os.path.join(BACTERIA_OUTPUT, filename)
-    # if os.path.isfile(f):
-      # select random # of lines
-      # add to pretrain file
-  for filename in os.listdir(PHAGE_OUTPUT):
-     f = os.path.join(PHAGE_OUTPUT, filename)
-    # if os.path.isfile(f):
-      # select random # of lines
-      # add to pretrain file
     
 
 ## Different tokenization methods
@@ -243,10 +231,28 @@ def seq2bpe(sequence):
   return output
 
 """\
-Pretrain model for BPE Tokenizer
+Build vocabulary for the byte tokenization model to work with
 
 Input:
-  sequences -- list, sequences to train on
+  vocab_dir -- str, directory of files to build model vocabulary on
+"""
+def build_vocab(vocab_dir):
+  sequences = []
+
+  for filename in os.listdir(vocab_dir):
+    f = os.path.join(vocab_dir, filename)
+    if f.endswith('.gz'):
+      f = gzip.open(f, 'rt', encoding='utf-8')
+    for record in SeqIO.parse(f, 'fasta'):
+      sequences.append(str(record.seq).upper())
+  
+  train_bpe_tokenizer(sequences)
+
+"""\
+'Pretrain' or build the vocabulary for the BPE model
+
+Input:
+  sequences -- list, sequences to train model on
 """
 def train_bpe_tokenizer(sequences):
   tokenizer = Tokenizer(models.BPE())
@@ -289,10 +295,11 @@ def main():
   global PHAGE_OUTPUT
 
   BACTERIA_OUTPUT = args.o1
-  PHAGE_OUTPUT = args.o1
 
   if args.o2 != None: 
     PHAGE_OUTPUT = args.o2
+  else:
+    PHAGE_OUTPUT = args.o1
 
   read_files(bacteria_dir=args.b, phage_dir=args.p, method=args.method, k=args.k)
 
