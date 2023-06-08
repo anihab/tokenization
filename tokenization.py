@@ -21,28 +21,28 @@ PHAGE_OUTPUT = ""
 ## Tokenize sequences given directory input
 
 """\
-Given a phage directory and a bacteria directory, tokenize all files
+Given a bacteria directory and a phage directory, tokenize all files
 according to method of choice.
 
 Input:
-  phage_dir -- str, path to directory of phage fasta files
   bacteria_dir -- str, path to directory of bacteria fasta files
+  phage_dir -- str, path to directory of phage fasta files
   method -- str, tokenization method of choice
   k -- int, length of k if using kmer tokenization
+  vocab -- str, path to directory of fasta files to build model vocab
 """
 def read_files(bacteria_dir, phage_dir, method, **kwargs):
   k = kwargs.get('k', None)
-  vocab_dir = kwargs.get('vocab_dir', None)
-
+  vocab_dir = kwargs.get('vocab', None)
   # Build model vocabulary if using byte tokenization
   if method == 'bpe':
     build_vocab(vocab_dir)  
-
-  # Tokenize all files       
+  # Tokenize all files in bacteria_dir       
   for filename in os.listdir(bacteria_dir):
     f = os.path.join(bacteria_dir, filename)
     if os.path.isfile(f):
       tokenize(f, 0, method, k=k)
+  # Tokenize all files in phage_dir
   for filename in os.listdir(phage_dir):
     f = os.path.join(phage_dir, filename)
     if os.path.isfile(f):
@@ -292,16 +292,15 @@ def main():
   args = parser.parse_args()
 
   global BACTERIA_OUTPUT
-  global PHAGE_OUTPUT
-
   BACTERIA_OUTPUT = args.o1
 
+  global PHAGE_OUTPUT
   if args.o2 != None: 
     PHAGE_OUTPUT = args.o2
   else:
     PHAGE_OUTPUT = args.o1
 
-  read_files(bacteria_dir=args.b, phage_dir=args.p, method=args.method, k=args.k)
+  read_files(bacteria_dir=args.b, phage_dir=args.p, method=args.method, k=args.k, vocab=args.vocab)
 
 if __name__ == "__main__":
     main()
