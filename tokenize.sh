@@ -19,20 +19,22 @@ conda list
 
 SCRIPT_PATH="/uufs/chpc.utah.edu/common/home/u1323098/anisa/SCRIPTS"
 
+# Arguments
 BACTERIA_DIR="/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/BACTERIA/FASTA"
 PHAGE_DIR="/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/PHAGE/FASTA"
-OUTPUT_DIR="/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/BPE"
-
+OUTPUT_DIR="/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/6MER"
 METHOD="bpe"
 K=None
 
 echo "TIME: Start: = `date +"%Y-%m-%d %T"`"
 cd $SCRIPT_PATH
 pwd
-python3 tokenization.py --b $BACTERIA_DIR --p $PHAGE_DIR --o1 $OUTPUT_DIR --method $METHOD --k $K
+python3 tokenization.py --b $BACTERIA_DIR --p $PHAGE_DIR --o1 $OUTPUT_DIR --method $METHOD
 echo "TIME: End: = `date +"%Y-%m-%d %T"`"
 
 # notes:
-# codon -- 6 sec for 5 bactera, 5 phage
-# 6mer -- 6 sec for 5 bactera, 5 phage
-# bpe -- 8.01 min for 5 bactera, 5 phage
+# test sample size - 1.2MB - 5 bacteria files, 5 phage files
+# codon -- 1 to 5 sec
+# 6mer -- 1 to 5 sec
+# bpe -- 8 min
+#     -- overhead pre-train full dataset = 10 sec 

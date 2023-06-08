@@ -19,14 +19,16 @@ conda list
 
 SCRIPT_PATH="/uufs/chpc.utah.edu/common/home/u1323098/anisa/SCRIPTS"
 
+# Arguments
 BACTERIA_DIR="/uufs/chpc.utah.edu/common/home/u1323098/sundar-group-space2/PHAGE/DATASETS/BACTERIA_RAW/FASTA/ncbi-genomes-2023-03-09/TEST"
 PHAGE_DIR="/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/PHAGE/FASTA"
+OUTPUT_DIR=
+METHOD="kmer"
+KMER=6
 
+# Output Directories
 BACTERIA_OUTPUT=$BACTERIA_DIR/TOKENIZED
 PHAGE_OUTPUT=$PHAGE_DIR/TOKENIZED
-
-METHOD="kmer"
-K=6
 
 # Create output directories
 mkdir "$BACTERIA_OUTPUT"
@@ -35,7 +37,13 @@ mkdir "$PHAGE_OUTPUT"
 echo "TIME: Start: = `date +"%Y-%m-%d %T"`"
 cd $SCRIPT_PATH
 pwd
-python3 tokenization.py --b $BACTERIA_DIR --p $PHAGE_DIR --o1 $BACTERIA_OUTPUT --o2 $PHAGE_OUTPUT --method $METHOD --k $K
+python3 tokenization.py \
+    --b $BACTERIA_DIR \
+    --p $PHAGE_DIR \ 
+    --o1 $BACTERIA_OUTPUT \ 
+    --o2 $PHAGE_OUTPUT \
+    --method $METHOD \
+    --k $KMER \
 
 # Concat all of the files together into one file
 cd $BACTERIA_OUTPUT
