@@ -33,10 +33,10 @@ Input:
 """
 def read_files(bacteria_files, phage_files, method, **kwargs):
   k = kwargs.get('k', None)
-  vocab_dir = kwargs.get('vocab', None)
+  vocab = kwargs.get('vocab', None)
   # Build model vocabulary if using byte tokenization
   if method == 'bpe':
-    build_vocab(vocab_dir) 
+    build_vocab(vocab)
   # Tokenize all files in bacteria_files
   for f in bacteria_files:
     if os.path.isfile(f):
@@ -232,18 +232,27 @@ def seq2bpe(sequence):
 Build vocabulary for the byte tokenization model to work with
 
 Input:
-  vocab_dir -- str, directory of files to build model vocabulary on
+  vocab -- str, directory or list of files to build model vocabulary on
 """
-def build_vocab(vocab_dir):
+def build_vocab(vocab):
   sequences = []
-
-  for filename in os.listdir(vocab_dir):
-    f = os.path.join(vocab_dir, filename)
-    if f.endswith('.gz'):
-      f = gzip.open(f, 'rt', encoding='utf-8')
-    for record in SeqIO.parse(f, 'fasta'):
-      sequences.append(str(record.seq).upper())
-  
+  ## If the input vocabulary is a directory
+  if os.path.isdir(vocab):
+    for filename in os.listdir(vocab):
+      f = os.path.join(vocab, filename)
+      if os.path.isfile(f):
+        if f.endswith('.gz'):
+          f = gzip.open(f, 'rt', encoding='utf-8')
+        for record in SeqIO.parse(f, 'fasta'):
+          sequences.append(str(record.seq).upper())
+  ## If the input vocabulary is a list of files
+  else:
+    for filename in vocab:
+      if os.path.isfile(f):
+        if f.endswith('.gz'):
+          f = gzip.open(f, 'rt', encoding='utf-8')
+        for record in SeqIO.parse(f, 'fasta'):
+          sequences.append(str(record.seq).upper())
   train_bpe_tokenizer(sequences)
 
 """\
@@ -268,7 +277,7 @@ def train_bpe_tokenizer(sequences):
 
 def main():
   parser = argparse.ArgumentParser()
-  # Required Parameters
+  # Parameters
   parser.add_argument(
         "--b", default=None, type=str, required=True, help="The input bacteria files."
     )
@@ -288,8 +297,8 @@ def main():
         "--k", default=None, type=int, required=False, help="Length k for kmer tokenization."
     )
   parser.add_argument(
-        "--vocab", default=None, type=str, required=False, help="The input vocabulary directory, for if using byte tokenization."
-  )
+        "--vocab", default=None, type=str, required=False, help="The directory or list of files to build the model vocabulary, if using bpe."
+    )
   args = parser.parse_args()
 
   global BACTERIA_OUTPUT
