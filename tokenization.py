@@ -4,7 +4,6 @@
 import argparse
 import gzip
 import os
-import random
 
 import pandas as pd
 import numpy as np
@@ -33,10 +32,15 @@ Input:
 """
 def read_files(bacteria_dir, phage_dir, method, **kwargs):
   k = kwargs.get('k', None)
-  vocab_dir = kwargs.get('vocab', None)
+  vocab = kwargs.get('vocab', None)
+  # Ensure that input is correct
+  if method == 'kmer' and k == None:
+    print("Missing argument, kmer tokenization method requires parameter \'k\'.")
+  if method == 'bpe' and vocab == None:
+    print("Missing argument, bpe tokenization method requires parameter \'vocab\'.")
   # Build model vocabulary if using byte tokenization
   if method == 'bpe':
-    build_vocab(vocab_dir)  
+    build_vocab(vocab)  
   # Tokenize all files in bacteria_dir       
   for filename in os.listdir(bacteria_dir):
     f = os.path.join(bacteria_dir, filename)
@@ -166,9 +170,9 @@ def attach_labels(sequences, tokens, label):
 
 """\
 Save the given dataframe to two separate csv files:
-1. full_output.csv includes the name, start position, sequence, tokenized
+1. _full.csv includes the name, start position, sequence, tokenized
    sequence, and label.
-2. tokenized_output.csv includes the tokenized sequence and the label.
+2. _tokenized.csv includes the tokenized sequence and the label.
 
 Input:
   df -- dataframe, full dataframe of tokenized sequences
@@ -238,7 +242,7 @@ Input:
 """
 def build_vocab(vocab):
   sequences = []
-  ## If the input vocabulary is a directory
+  # If the input vocabulary is a directory
   if os.path.isdir(vocab):
     for filename in os.listdir(vocab):
       f = os.path.join(vocab, filename)
@@ -247,7 +251,7 @@ def build_vocab(vocab):
           f = gzip.open(f, 'rt', encoding='utf-8')
         for record in SeqIO.parse(f, 'fasta'):
           sequences.append(str(record.seq).upper())
-  ## If the input vocabulary is a list of files
+  # If the input vocabulary is a list of files
   else:
     for filename in vocab:
       if os.path.isfile(f):
@@ -265,14 +269,11 @@ Input:
 """
 def train_bpe_tokenizer(sequences):
   tokenizer = Tokenizer(models.BPE())
-
   # Customize the tokenizer to handle DNA sequences
   tokenizer.normalizer = normalizers.Sequence([normalizers.NFKC()])
-
   # Train the tokenizer on your DNA sequences
   trainer = trainers.BpeTrainer(vocab_size=50000)
   tokenizer.train_from_iterator(sequences, trainer=trainer)
-
   tokenizer.save("dna_tokenizer.json")
 
 ## MAIN
