@@ -40,21 +40,21 @@ def read_files(bacteria_dir, phage_dir, method, **kwargs):
   if method == 'bpe' and vocab == None:
     print("Missing argument, bpe tokenization method requires parameter \'vocab\'.")
 
-  # Build model vocabulary if using byte tokenization
+  # Build model vocabulary if using bpe
   if method == 'bpe':
     build_vocab(vocab)
 
-  # Tokenize all files in bacteria_dir       
+  # Tokenize all files in bacteria_dir 
   for filename in os.listdir(bacteria_dir):
     f = os.path.join(bacteria_dir, filename)
     if os.path.isfile(f) and not is_file_read(BACTERIA_OUTPUT, filename):
       tokenize(f, 0, method, k=k)
-
+      
   # Tokenize all files in phage_dir
-  for filename in os.listdir(phage_dir):
-    f = os.path.join(phage_dir, filename)
-    if os.path.isfile(f) and not is_file_read(PHAGE_OUTPUT, filename):
-      tokenize(f, 1, method, k=k)
+    for filename in os.listdir(phage_dir):
+      f = os.path.join(phage_dir, filename)
+      if os.path.isfile(f) and not is_file_read(PHAGE_OUTPUT, filename):
+        tokenize(f, 1, method, k=k)
 
 """\
 Runs fasta files through tokenizer and adds the label of 1 for phage and
@@ -108,7 +108,6 @@ Read fasta file and truncate sequences to appropriate length, returns dataframe
 Input:
   filepath -- str, path to fasta file
   max_length -- int, maximum sequence length
-
 Returns:
   df -- dataframe, includes the file title, > input line, start position, and sequence
 """ 
@@ -157,7 +156,6 @@ Input:
   sequences -- list, original sequences
   tokens -- list, tokenized sequences
   label -- int, 1 for phage or 0 for bacteria
-
 Returns:
   df -- dataframe
 """ 
@@ -200,7 +198,6 @@ Convert a sequence to codons
 
 Input:
   seq -- str, original sequence
-
 Returns:
   codons -- str, codons separated by space
 """
@@ -215,7 +212,6 @@ Convert a sequence to kmers
 Input:
   seq -- str, original sequence
   k -- int, kmer of length k
-
 Returns:
   kmers -- str, kmers separated by space
 """
@@ -229,7 +225,6 @@ Convert a sequence to byte pair encodings
 
 Input:
   seq -- str, original sequence
-
 Returns:
   output -- str, decoded tokens separated by a space
 """
@@ -241,12 +236,30 @@ def seq2bpe(sequence):
   return output
 
 """\
-Build vocabulary for the byte tokenization model to work with
+Build the vocabulary for the BPE model
 
 Input:
   vocab -- str, directory or list of files to build model vocabulary on
 """
 def build_vocab(vocab):
+  sequences = parse_vocab(vocab)
+  tokenizer = Tokenizer(models.BPE())
+  # Customize the tokenizer to handle DNA sequences
+  tokenizer.normalizer = normalizers.Sequence([normalizers.NFKC()])
+  # Train the tokenizer on your DNA sequences
+  trainer = trainers.BpeTrainer(vocab_size=50000)
+  tokenizer.train_from_iterator(sequences, trainer=trainer)
+  tokenizer.save("dna_tokenizer.json")
+
+"""\
+Parse vocabulary for the BPE model to work with
+
+Input:
+  vocab -- str, directory or list of files to build model vocabulary on
+Returns:
+  sequences -- list, sequences to train model on
+"""
+def parse_vocab(vocab):
   sequences = []
   # If the input vocabulary is a directory
   if os.path.isdir(vocab):
@@ -263,8 +276,11 @@ def build_vocab(vocab):
             seq = seq[MAX_TOKENS:]  
           sequences.append(seq)
   # If the input vocabulary is a list of files
-  else:
-    for filename in vocab:
+  elif os.path.isfile(vocab):
+    with open(vocab, 'r') as list:
+      for f in list:
+        f = f.strip()
+        filename = os.path.basename(f)
       if os.path.isfile(f):
         if f.endswith('.gz'):
           f = gzip.open(f, 'rt', encoding='utf-8')
@@ -275,22 +291,6 @@ def build_vocab(vocab):
             sequences.append(seq[:MAX_TOKENS])
             seq = seq[MAX_TOKENS:]  
           sequences.append(seq)
-  train_bpe_tokenizer(sequences)
-
-"""\
-'Pretrain' or build the vocabulary for the BPE model
-
-Input:
-  sequences -- list, sequences to train model on
-"""
-def train_bpe_tokenizer(sequences):
-  tokenizer = Tokenizer(models.BPE())
-  # Customize the tokenizer to handle DNA sequences
-  tokenizer.normalizer = normalizers.Sequence([normalizers.NFKC()])
-  # Train the tokenizer on your DNA sequences
-  trainer = trainers.BpeTrainer(vocab_size=50000)
-  tokenizer.train_from_iterator(sequences, trainer=trainer)
-  tokenizer.save("dna_tokenizer.json")
 
 ## Keep track of files
 
@@ -299,10 +299,9 @@ Determines whether or not a file has already been processed by checking
 if the output filename exists in the output directory.
 
 Input:
-filename -- str, the full name of the file to check
-
+  filename -- str, the full name of the file to check
 Returns:
-isfile -- bool, whether the file has already been tokenized
+  isfile -- bool, whether the file has already been tokenized
 '''
 def is_file_read(directory, filename):
   file_path = os.path.join(directory, filename.split('.')[0]  + '_tokenized.csv')
