@@ -33,23 +33,27 @@ Input:
 def read_files(bacteria_dir, phage_dir, method, **kwargs):
   k = kwargs.get('k', None)
   vocab = kwargs.get('vocab', None)
+
   # Ensure that input is correct
   if method == 'kmer' and k == None:
     print("Missing argument, kmer tokenization method requires parameter \'k\'.")
   if method == 'bpe' and vocab == None:
     print("Missing argument, bpe tokenization method requires parameter \'vocab\'.")
+
   # Build model vocabulary if using byte tokenization
   if method == 'bpe':
-    build_vocab(vocab)  
+    build_vocab(vocab)
+
   # Tokenize all files in bacteria_dir       
   for filename in os.listdir(bacteria_dir):
     f = os.path.join(bacteria_dir, filename)
-    if os.path.isfile(f):
+    if os.path.isfile(f) and not is_file_read(BACTERIA_OUTPUT, filename):
       tokenize(f, 0, method, k=k)
+
   # Tokenize all files in phage_dir
   for filename in os.listdir(phage_dir):
     f = os.path.join(phage_dir, filename)
-    if os.path.isfile(f):
+    if os.path.isfile(f) and not is_file_read(PHAGE_OUTPUT, filename):
       tokenize(f, 1, method, k=k)
 
 """\
@@ -115,34 +119,36 @@ def preprocess_data(filepath, max_length):
   if filepath.endswith('.gz'):
     f = gzip.open(filepath, 'rt', encoding='utf-8')
 
-  for record in SeqIO.parse(f, 'fasta'):
-    filename = os.path.basename(filepath)
-    name = filename.split('.')[0]
-    segment = str(record.name)
-    seq = str(record.seq).upper()
-    pos = 0 
-    # Truncate sequences if longer than max_length
-    while len(seq) > max_length:
-      records.append(                  # add subsequence up to max_length
-        {
-          'name': name,
-          'segment': segment,
-          'start': pos,
-          'sequence': seq[:max_length]
-        }
+  try:
+    for record in SeqIO.parse(f, 'fasta'):
+      filename = os.path.basename(filepath)
+      name = filename.split('.')[0]
+      segment = str(record.name)
+      seq = str(record.seq).upper()
+      pos = 0 
+      # Truncate sequences if longer than max_length
+      while len(seq) > max_length:
+        records.append(                  # add subsequence up to max_length
+          {
+            'name': name,
+            'segment': segment,
+            'start': pos,
+            'sequence': seq[:max_length]
+          }
+        )
+        seq = seq[max_length:]           # sequence continuing from max_length
+        pos += max_length
+      records.append(
+          {
+            'name': name,
+            'segment': segment,
+            'start': pos,
+            'sequence': seq
+          }
       )
-      seq = seq[max_length:]           # sequence continuing from max_length
-      pos += max_length
-    records.append(
-        {
-          'name': name,
-          'segment': segment,
-          'start': pos,
-          'sequence': seq
-        }
-    )
-  df = pd.DataFrame(data=records)
-  return df
+  finally:
+    df = pd.DataFrame(data=records)
+    return df
 
 """\
 Read in sequences and tokens to attach labels and return dataframe
@@ -250,7 +256,12 @@ def build_vocab(vocab):
         if f.endswith('.gz'):
           f = gzip.open(f, 'rt', encoding='utf-8')
         for record in SeqIO.parse(f, 'fasta'):
-          sequences.append(str(record.seq).upper())
+          # Truncate sequences if longer than max_length
+          seq = str(record.seq).upper()
+          while len(seq) > MAX_TOKENS:
+            sequences.append(seq[:MAX_TOKENS])
+            seq = seq[MAX_TOKENS:]  
+          sequences.append(seq)
   # If the input vocabulary is a list of files
   else:
     for filename in vocab:
@@ -258,7 +269,12 @@ def build_vocab(vocab):
         if f.endswith('.gz'):
           f = gzip.open(f, 'rt', encoding='utf-8')
         for record in SeqIO.parse(f, 'fasta'):
-          sequences.append(str(record.seq).upper())
+          # Truncate sequences if longer than max_length
+          seq = str(record.seq).upper()
+          while len(seq) > MAX_TOKENS:
+            sequences.append(seq[:MAX_TOKENS])
+            seq = seq[MAX_TOKENS:]  
+          sequences.append(seq)
   train_bpe_tokenizer(sequences)
 
 """\
@@ -275,6 +291,22 @@ def train_bpe_tokenizer(sequences):
   trainer = trainers.BpeTrainer(vocab_size=50000)
   tokenizer.train_from_iterator(sequences, trainer=trainer)
   tokenizer.save("dna_tokenizer.json")
+
+## Keep track of files
+
+'''\
+Determines whether or not a file has already been processed by checking
+if the output filename exists in the output directory.
+
+Input:
+filename -- str, the full name of the file to check
+
+Returns:
+isfile -- bool, whether the file has already been tokenized
+'''
+def is_file_read(directory, filename):
+  file_path = os.path.join(directory, filename.split('.')[0]  + '_tokenized.csv')
+  return os.path.isfile(file_path)
 
 ## MAIN
 
