@@ -22,14 +22,15 @@ SCRIPT_PATH="/uufs/chpc.utah.edu/common/home/u1323098/anisa/SCRIPTS"
 # Arguments
 BACTERIA_DIR="/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/BACTERIA/FASTA"
 PHAGE_DIR="/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/PHAGE/FASTA"
-OUTPUT_DIR="/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/6MER"
+OUTPUT_DIR="/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/BPE"
 METHOD="bpe"
 K=None
+VOCAB=None
 
 echo "TIME: Start: = `date +"%Y-%m-%d %T"`"
 cd $SCRIPT_PATH
 pwd
-python3 tokenization.py --b $BACTERIA_DIR --p $PHAGE_DIR --o1 $OUTPUT_DIR --method $METHOD
+python3 tokenization.py --b $BACTERIA_DIR --p $PHAGE_DIR --o1 $OUTPUT_DIR --method $METHOD --vocab $VOCAB
 echo "TIME: End: = `date +"%Y-%m-%d %T"`"
 
 # notes:
