@@ -15,15 +15,18 @@ source activate TOKENIZE
 which python3
 python --version 
 which pip
-# conda list
+conda list
 
+# Script and Output paths
 SCRIPT_PATH=/uufs/chpc.utah.edu/common/home/u1323098/anisa/SCRIPTS
 OUTPUT_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/6MER_FINETUNE
 
+# Get file list
 find /uufs/chpc.utah.edu/common/home/u1323098/sundar-group-space2/PHAGE/DATASETS/BACTERIA_RAW/FASTA/ncbi-genomes-2023-05-25 -type f | shuf -n 500 > $OUTPUT_DIR/file_list.txt
 
-BACTERIA_DIR=$OUTPUT_DIR/file_list.txt
-PHAGE_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/PHAGE/FASTA
+# Arguments
+BACTERIA_LIST=$OUTPUT_DIR/file_list.txt
+PHAGE_LIST=None
 METHOD=kmer
 KMER=6
 VOCAB_DIR=None
@@ -34,7 +37,7 @@ PHAGE_OUTPUT=$OUTPUT_DIR/PHAGE
 echo "TIME: Start: = `date +"%Y-%m-%d %T"`"
 cd $SCRIPT_PATH
 pwd
-python3 tokenization.py --b $BACTERIA_DIR --p $PHAGE_DIR --o1 $BACTERIA_OUTPUT --o2 $PHAGE_OUTPUT --method $METHOD --k $KMER --vocab $VOCAB_DIR
+python3 tokenization_list.py --b $BACTERIA_LIST --p $PHAGE_LIST --o1 $BACTERIA_OUTPUT --o2 $PHAGE_OUTPUT --method $METHOD --k $KMER --vocab $VOCAB_DIR
 
 # Concat all of the files together into one file
 cd $OUTPUT_DIR
