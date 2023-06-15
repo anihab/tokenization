@@ -19,25 +19,37 @@ conda list
 
 # Script and Output paths
 SCRIPT_PATH=/uufs/chpc.utah.edu/common/home/u1323098/anisa/SCRIPTS
-OUTPUT_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/6MER_FINETUNE
+OUTPUT_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/CODON_LARGE
 
 # Get file list
-find /uufs/chpc.utah.edu/common/home/u1323098/sundar-group-space2/PHAGE/DATASETS/BACTERIA_RAW/FASTA/ncbi-genomes-2023-05-25 -type f | shuf -n 500 > $OUTPUT_DIR/file_list.txt
+find /uufs/chpc.utah.edu/common/home/u1323098/sundar-group-space2/PHAGE/DATASETS/BACTERIA_RAW/FASTA/ncbi-genomes-2023-05-25 -type f | shuf -n 500 > $OUTPUT_DIR/bacteria_list.txt
 
 # Arguments
-BACTERIA_LIST=$OUTPUT_DIR/file_list.txt
-PHAGE_LIST=None
-METHOD=kmer
-KMER=6
+BACTERIA_LIST=$OUTPUT_DIR/bacteria_list.txt
+PHAGE_LIST=$OUTPUT_DIR/phage_list.txt
+METHOD=codon
+KMER=None
 VOCAB_DIR=None
 
 BACTERIA_OUTPUT=$OUTPUT_DIR/BACTERIA
 PHAGE_OUTPUT=$OUTPUT_DIR/PHAGE
 
+# Create output directories
+mkdir $BACTERIA_OUTPUT
+mkdir $PHAGE_OUTPUT
+
 echo "TIME: Start: = `date +"%Y-%m-%d %T"`"
 cd $SCRIPT_PATH
 pwd
-python3 tokenization_list.py --b $BACTERIA_LIST --p $PHAGE_LIST --o1 $BACTERIA_OUTPUT --o2 $PHAGE_OUTPUT --method $METHOD --k $KMER --vocab $VOCAB_DIR
+echo "Tokenizing..."
+python3 tokenization_list.py --b $BACTERIA_LIST \
+                             --p $PHAGE_LIST \
+                             --o1 $BACTERIA_OUTPUT \
+                             --o2 $PHAGE_OUTPUT \
+                             --method $METHOD 
+                            #  --k $KMER \
+                            #  --vocab $VOCAB_DIR
+echo "Tokenization complete, finetuning..."
 
 # Concat all of the files together into one file
 cd $OUTPUT_DIR
