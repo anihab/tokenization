@@ -281,16 +281,17 @@ def parse_vocab(vocab):
       for f in list:
         f = f.strip()
         filename = os.path.basename(f)
-      if os.path.isfile(f):
-        if f.endswith('.gz'):
-          f = gzip.open(f, 'rt', encoding='utf-8')
-        for record in SeqIO.parse(f, 'fasta'):
-          # Truncate sequences if longer than max_length
-          seq = str(record.seq).upper()
-          while len(seq) > MAX_TOKENS:
-            sequences.append(seq[:MAX_TOKENS])
-            seq = seq[MAX_TOKENS:]  
-          sequences.append(seq)
+        if os.path.isfile(f):
+          if f.endswith('.gz'):
+            f = gzip.open(f, 'rt', encoding='utf-8')
+          for record in SeqIO.parse(f, 'fasta'):
+            seq = str(record.seq).upper()
+            # Truncate sequences if longer than max_length
+            while len(seq) > MAX_TOKENS:
+              sequences.append(seq[:MAX_TOKENS])
+              seq = seq[MAX_TOKENS:]  
+            sequences.append(seq)
+  return sequences
 
 ## Keep track of files
 
