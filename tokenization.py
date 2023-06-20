@@ -14,6 +14,7 @@ from transformers import PreTrainedTokenizerFast
 
 # Globals
 MAX_TOKENS = 510
+VOCAB_SIZE = 5000
 BACTERIA_OUTPUT = ""
 PHAGE_OUTPUT = ""
 
@@ -74,13 +75,13 @@ def tokenize(filepath, label, method, **kwargs):
   filename = os.path.basename(filepath)
   filename = filename.split('.')[0]
 
-  # Calculate max segment length
+  # Calculate appropriate max segment length
   if method == 'codon':
     max_length = MAX_TOKENS * 3
   elif method == 'kmer':
     max_length = MAX_TOKENS - (k - 1)
   elif method == 'bpe':
-    max_length = MAX_TOKENS
+    max_length = None
 
   # Process data to get sequences of appropriate length 
   df = preprocess_data(filepath, max_length)
@@ -126,17 +127,18 @@ def preprocess_data(filepath, max_length):
       seq = str(record.seq).upper()
       pos = 0 
       # Truncate sequences if longer than max_length
-      while len(seq) > max_length:
-        records.append(                  # add subsequence up to max_length
-          {
-            'name': name,
-            'segment': segment,
-            'start': pos,
-            'sequence': seq[:max_length]
-          }
-        )
-        seq = seq[max_length:]           # sequence continuing from max_length
-        pos += max_length
+      if max_length != None:
+        while len(seq) > max_length:
+          records.append(                  # add subsequence up to max_length
+            {
+              'name': name,
+              'segment': segment,
+              'start': pos,
+              'sequence': seq[:max_length]
+            }
+          )
+          seq = seq[max_length:]           # sequence continuing from max_length
+          pos += max_length
       records.append(
           {
             'name': name,
@@ -247,7 +249,7 @@ def build_vocab(vocab):
   # Customize the tokenizer to handle DNA sequences
   tokenizer.normalizer = normalizers.Sequence([normalizers.NFKC()])
   # Train the tokenizer on your DNA sequences
-  trainer = trainers.BpeTrainer(vocab_size=50000)
+  trainer = trainers.BpeTrainer(VOCAB_SIZE)
   tokenizer.train_from_iterator(sequences, trainer=trainer)
   tokenizer.save("dna_tokenizer.json")
 
@@ -271,9 +273,9 @@ def parse_vocab(vocab):
         for record in SeqIO.parse(f, 'fasta'):
           # Truncate sequences if longer than max_length
           seq = str(record.seq).upper()
-          while len(seq) > MAX_TOKENS:
-            sequences.append(seq[:MAX_TOKENS])
-            seq = seq[MAX_TOKENS:]  
+          while len(seq) > MAX_VOCAB_LENGTH:
+            sequences.append(seq[:MAX_VOCAB_LENGTH])
+            seq = seq[MAX_VOCAB_LENGTH:]  
           sequences.append(seq)
   # If the input vocabulary is a list of files
   elif os.path.isfile(vocab):
@@ -287,9 +289,9 @@ def parse_vocab(vocab):
           for record in SeqIO.parse(f, 'fasta'):
             seq = str(record.seq).upper()
             # Truncate sequences if longer than max_length
-            while len(seq) > MAX_TOKENS:
-              sequences.append(seq[:MAX_TOKENS])
-              seq = seq[MAX_TOKENS:]  
+            while len(seq) > MAX_VOCAB_LENGTH:
+              sequences.append(seq[:MAX_VOCAB_LENGTH])
+              seq = seq[MAX_VOCAB_LENGTH:]  
             sequences.append(seq)
   return sequences
 
@@ -297,7 +299,8 @@ def parse_vocab(vocab):
 
 '''\
 Determines whether or not a file has already been processed by checking
-if the output filename exists in the output directory.
+if the output filename exists in the output directory and has a size
+greater than 0.
 
 Input:
   filename -- str, the full name of the file to check
@@ -306,7 +309,10 @@ Returns:
 '''
 def is_file_read(directory, filename):
   file_path = os.path.join(directory, filename.split('.')[0]  + '_tokenized.csv')
-  return os.path.isfile(file_path)
+  if os.path.isfile(file_path) and os.path.getsize(file_path) > 0:
+    return True
+  else:
+    return False
 
 ## MAIN
 
@@ -336,6 +342,7 @@ def main():
     )
   args = parser.parse_args()
 
+  # Set-up output paths
   global BACTERIA_OUTPUT
   BACTERIA_OUTPUT = args.o1
 
@@ -345,6 +352,7 @@ def main():
   else:
     PHAGE_OUTPUT = args.o1
 
+  # Tokenize files
   read_files(bacteria_dir=args.b, phage_dir=args.p, method=args.method, k=args.k, vocab=args.vocab)
 
 if __name__ == "__main__":
