@@ -21,8 +21,8 @@ SCRIPT_PATH=/uufs/chpc.utah.edu/common/home/u1323098/anisa/SCRIPTS
 OUTPUT_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/6MER
 
 # Arguments
-BACTERIA_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/BACTERIA/FASTA
-PHAGE_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/PHAGE/FASTA
+BACTERIA_INPUT=/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/BACTERIA/FASTA
+PHAGE_INPUT=/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/PHAGE/FASTA
 METHOD=kmer
 KMER=6
 VOCAB_DIR=None
@@ -38,13 +38,24 @@ mkdir $PHAGE_OUTPUT
 echo "TIME: Start: = `date +"%Y-%m-%d %T"`"
 cd $SCRIPT_PATH
 pwd
-python3 tokenization.py --b $BACTERIA_LIST \
-                        --p $PHAGE_LIST \
+if [[ $BACTERIA_INPUT == *.txt ]]; then
+    python3 tokenization_list.py --b $BACTERIA_INPUT \
+                             --p $PHAGE_INPUT \
+                             --b_out $BACTERIA_OUTPUT \
+                             --p_out $PHAGE_OUTPUT \
+                             --method $METHOD \
+                             --k $KMER \
+                             --vocab $VOCAB_DIR
+else
+    python3 tokenization.py --b $BACTERIA_INPUT \
+                        --p $PHAGE_INPUT \
                         --b_out $BACTERIA_OUTPUT \
                         --p_out $PHAGE_OUTPUT \
                         --method $METHOD \
                         --k $KMER \
                         --vocab $VOCAB_DIR
+fi
+
 # Concat all of the files together into one file
 cd $OUTPUT_DIR
 pwd
