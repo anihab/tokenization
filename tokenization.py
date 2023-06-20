@@ -15,8 +15,7 @@ from transformers import PreTrainedTokenizerFast
 # Globals
 MAX_TOKENS = 510
 VOCAB_SIZE = 5000
-BACTERIA_OUTPUT = ""
-PHAGE_OUTPUT = ""
+MAX_VOCAB_TOKEN_LENGTH = 2000
 
 ## Tokenize sequences given directory input
 
@@ -24,14 +23,18 @@ PHAGE_OUTPUT = ""
 Given a bacteria directory and a phage directory, tokenize all files
 according to method of choice.
 
-Input:
+Arguments:
   bacteria_dir -- str, path to directory of bacteria fasta files
   phage_dir -- str, path to directory of phage fasta files
   method -- str, tokenization method of choice
+  b_out -- str, path to directory for all or bacteria output
+  p_out -- str, path to directory for phage ouput
   k -- int, length of k if using kmer tokenization
   vocab -- str, path to directory of fasta files to build model vocab
 """
 def read_files(bacteria_dir, phage_dir, method, **kwargs):
+  b_out = kwargs.get('b_out', None)
+  p_out = kwargs.get('p_out', b_out)
   k = kwargs.get('k', None)
   vocab = kwargs.get('vocab', None)
 
@@ -48,26 +51,27 @@ def read_files(bacteria_dir, phage_dir, method, **kwargs):
   # Tokenize all files in bacteria_dir 
   for filename in os.listdir(bacteria_dir):
     f = os.path.join(bacteria_dir, filename)
-    if os.path.isfile(f) and not is_file_read(BACTERIA_OUTPUT, filename):
-      tokenize(f, 0, method, k=k)
+    if os.path.isfile(f) and not is_file_read(b_out, filename):
+      tokenize(f, 0, method, b_out, k=k)
       
   # Tokenize all files in phage_dir
     for filename in os.listdir(phage_dir):
       f = os.path.join(phage_dir, filename)
-      if os.path.isfile(f) and not is_file_read(PHAGE_OUTPUT, filename):
-        tokenize(f, 1, method, k=k)
+      if os.path.isfile(f) and not is_file_read(p_out, filename):
+        tokenize(f, 1, method, p_out, k=k)
 
 """\
 Runs fasta files through tokenizer and adds the label of 1 for phage and
 0 for bacteria. Then shuffles the rows in the dataframe and saves to CSV 
 
-Input:
+Arguments:
   filepath -- str, path to fasta file
   label -- int, 0 for bacteria or 1 for phage
   method -- str, tokenization method of choice
+  output_dir -- str, path to directory for output
   k -- int, length of k if using kmer tokenization
 """
-def tokenize(filepath, label, method, **kwargs):
+def tokenize(filepath, label, method, output_dir, **kwargs):
   sequences = []
   tokens = []
 
@@ -100,13 +104,13 @@ def tokenize(filepath, label, method, **kwargs):
   
   # Shuffle and save to csv
   df = df.sample(frac=1).reset_index(drop=True)
-  write_csv(filename, label, df)
+  write_csv(filename, df, output_dir)
   return df
 
 """\
 Read fasta file and truncate sequences to appropriate length, returns dataframe
 
-Input:
+Arguments:
   filepath -- str, path to fasta file
   max_length -- int, maximum sequence length
 Returns:
@@ -154,7 +158,7 @@ def preprocess_data(filepath, max_length):
 """\
 Read in sequences and tokens to attach labels and return dataframe
 
-Input:
+Arguments:
   sequences -- list, original sequences
   tokens -- list, tokenized sequences
   label -- int, 1 for phage or 0 for bacteria
@@ -180,17 +184,15 @@ Save the given dataframe to two separate csv files:
    sequence, and label.
 2. _tokenized.csv includes the tokenized sequence and the label.
 
-Input:
+Arguments:
+  filename -- str, name of file being tokenized
   df -- dataframe, full dataframe of tokenized sequences
+  output_dir -- str, path to directory for output
 """ 
-def write_csv(filename, label, df):
-  if label == 0:
-    directory = BACTERIA_OUTPUT
-  else:
-    directory = PHAGE_OUTPUT
+def write_csv(filename, df, output_dir):
   # df.to_csv(directory + "/" + filename + '_full.csv', encoding='utf-8', index=False)
   tokenized = df[['tokenized', 'label']]
-  tokenized.to_csv(directory + "/" + filename + '_tokenized.csv', encoding='utf-8', index=False, header=False, sep='\t')
+  tokenized.to_csv(output_dir + "/" + filename + '_tokenized.csv', encoding='utf-8', index=False, header=False, sep='\t')
     
 
 ## Different tokenization methods
@@ -198,7 +200,7 @@ def write_csv(filename, label, df):
 """\
 Convert a sequence to codons
 
-Input:
+Arguments:
   seq -- str, original sequence
 Returns:
   codons -- str, codons separated by space
@@ -211,7 +213,7 @@ def seq2codon(seq):
 """\
 Convert a sequence to kmers
 
-Input:
+Arguments:
   seq -- str, original sequence
   k -- int, kmer of length k
 Returns:
@@ -225,7 +227,7 @@ def seq2kmer(seq, k):
 """\
 Convert a sequence to byte pair encodings
 
-Input:
+Arguments:
   seq -- str, original sequence
 Returns:
   output -- str, decoded tokens separated by a space
@@ -240,7 +242,7 @@ def seq2bpe(sequence):
 """\
 Build the vocabulary for the BPE model
 
-Input:
+Arguments:
   vocab -- str, directory or list of files to build model vocabulary on
 """
 def build_vocab(vocab):
@@ -256,7 +258,7 @@ def build_vocab(vocab):
 """\
 Parse vocabulary for the BPE model to work with
 
-Input:
+Arguments:
   vocab -- str, directory or list of files to build model vocabulary on
 Returns:
   sequences -- list, sequences to train model on
@@ -273,9 +275,9 @@ def parse_vocab(vocab):
         for record in SeqIO.parse(f, 'fasta'):
           # Truncate sequences if longer than max_length
           seq = str(record.seq).upper()
-          while len(seq) > MAX_VOCAB_LENGTH:
-            sequences.append(seq[:MAX_VOCAB_LENGTH])
-            seq = seq[MAX_VOCAB_LENGTH:]  
+          while len(seq) > MAX_VOCAB_TOKEN_LENGTH:
+            sequences.append(seq[:MAX_VOCAB_TOKEN_LENGTH])
+            seq = seq[MAX_VOCAB_TOKEN_LENGTH:]  
           sequences.append(seq)
   # If the input vocabulary is a list of files
   elif os.path.isfile(vocab):
@@ -289,9 +291,9 @@ def parse_vocab(vocab):
           for record in SeqIO.parse(f, 'fasta'):
             seq = str(record.seq).upper()
             # Truncate sequences if longer than max_length
-            while len(seq) > MAX_VOCAB_LENGTH:
-              sequences.append(seq[:MAX_VOCAB_LENGTH])
-              seq = seq[MAX_VOCAB_LENGTH:]  
+            while len(seq) > MAX_VOCAB_TOKEN_LENGTH:
+              sequences.append(seq[:MAX_VOCAB_TOKEN_LENGTH])
+              seq = seq[MAX_VOCAB_TOKEN_LENGTH:]  
             sequences.append(seq)
   return sequences
 
@@ -302,7 +304,7 @@ Determines whether or not a file has already been processed by checking
 if the output filename exists in the output directory and has a size
 greater than 0.
 
-Input:
+Arguments:
   filename -- str, the full name of the file to check
 Returns:
   isfile -- bool, whether the file has already been tokenized
@@ -326,10 +328,10 @@ def main():
         "--p", default=None, type=str, required=True, help="The input phage directory."
     )
   parser.add_argument(
-        "--o1", default=None, type=str, required=True, help="The first output directory, for bacteria if using both."
+        "--b_out", default=None, type=str, required=False, help="The first output directory, for bacteria if using both."
     )
   parser.add_argument(
-        "--o2", default=None, type=str, required=False, help="The second output directory, for phage if using both."
+        "--p_out", default=None, type=str, required=False, help="The second output directory, for phage if using both."
     )
   parser.add_argument(
         "--method", default=None, type=str, required=True, help="The tokenization method of choice: kmer, codon, or bpe."
@@ -342,18 +344,8 @@ def main():
     )
   args = parser.parse_args()
 
-  # Set-up output paths
-  global BACTERIA_OUTPUT
-  BACTERIA_OUTPUT = args.o1
-
-  global PHAGE_OUTPUT
-  if args.o2 != None: 
-    PHAGE_OUTPUT = args.o2
-  else:
-    PHAGE_OUTPUT = args.o1
-
   # Tokenize files
-  read_files(bacteria_dir=args.b, phage_dir=args.p, method=args.method, k=args.k, vocab=args.vocab)
+  read_files(bacteria_dir=args.b, phage_dir=args.p, method=args.method, b_out=args.b_out, p_out=args.p_out, k=args.k, vocab=args.vocab)
 
 if __name__ == "__main__":
     main()
