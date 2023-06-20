@@ -17,25 +17,18 @@ python --version
 which pip
 conda list
 
-SCRIPT_PATH="/uufs/chpc.utah.edu/common/home/u1323098/anisa/SCRIPTS"
+SCRIPT_PATH=/uufs/chpc.utah.edu/common/home/u1323098/anisa/SCRIPTS
 
 # Arguments
-BACTERIA_DIR="/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/BACTERIA/FASTA"
-PHAGE_DIR="/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/PHAGE/FASTA"
-OUTPUT_DIR="/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/BPE"
-METHOD="bpe"
-K=None
-VOCAB=None
+BACTERIA_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/BACTERIA/CDS
+PHAGE_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/PHAGE/CDS
+OUTPUT_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/CODON_SMALL
+METHOD=codon
+KMER=None
+VOCAB_DIR=None
 
 echo "TIME: Start: = `date +"%Y-%m-%d %T"`"
 cd $SCRIPT_PATH
 pwd
-python3 tokenization.py --b $BACTERIA_DIR --p $PHAGE_DIR --o1 $OUTPUT_DIR --method $METHOD --vocab $VOCAB
-echo "TIME: End: = `date +"%Y-%m-%d %T"`"
-
-# notes:
-# test sample size - 1.2MB - 5 bacteria files, 5 phage files
-# codon -- 1 to 5 sec
-# 6mer -- 1 to 5 sec
-# bpe -- 8 min
-#     -- overhead pre-train full dataset = 10 sec 
+python3 tokenization.py --b $BACTERIA_DIR --p $PHAGE_DIR --b_out $OUTPUT_DIR --method $METHOD
+echo "TIME: End: = `date +"%Y-%m-%d %T"`" 

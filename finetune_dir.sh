@@ -18,13 +18,13 @@ which pip
 conda list
 
 SCRIPT_PATH=/uufs/chpc.utah.edu/common/home/u1323098/anisa/SCRIPTS
-OUTPUT_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/4MER
+OUTPUT_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/6MER
 
 # Arguments
 BACTERIA_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/BACTERIA/FASTA
 PHAGE_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/PHAGE/FASTA
 METHOD=kmer
-KMER=4
+KMER=6
 VOCAB_DIR=None
 
 # Output Directories
@@ -40,10 +40,10 @@ cd $SCRIPT_PATH
 pwd
 python3 tokenization.py --b $BACTERIA_LIST \
                         --p $PHAGE_LIST \
-                        --o1 $BACTERIA_OUTPUT \
-                        --o2 $PHAGE_OUTPUT \
+                        --b_out $BACTERIA_OUTPUT \
+                        --p_out $PHAGE_OUTPUT \
                         --method $METHOD \
-                        --k $KMER\
+                        --k $KMER \
                         --vocab $VOCAB_DIR
 # Concat all of the files together into one file
 cd $OUTPUT_DIR

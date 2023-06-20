@@ -28,7 +28,7 @@ find /uufs/chpc.utah.edu/common/home/u1323098/sundar-group-space2/PHAGE/DATASETS
 BACTERIA_LIST=$OUTPUT_DIR/bacteria_list.txt
 PHAGE_LIST=$OUTPUT_DIR/phage_list.txt
 METHOD=codon
-KMER=None
+KMER=0
 VOCAB_DIR=None
 
 BACTERIA_OUTPUT=$OUTPUT_DIR/BACTERIA
@@ -44,11 +44,11 @@ pwd
 echo "Tokenizing..."
 python3 tokenization_list.py --b $BACTERIA_LIST \
                              --p $PHAGE_LIST \
-                             --o1 $BACTERIA_OUTPUT \
-                             --o2 $PHAGE_OUTPUT \
-                             --method $METHOD 
-                            #  --k $KMER \
-                            #  --vocab $VOCAB_DIR
+                             --b_out $BACTERIA_OUTPUT \
+                             --p_out $PHAGE_OUTPUT \
+                             --method $METHOD \
+                             --k $KMER \
+                             --vocab $VOCAB_DIR
 echo "Tokenization complete, finetuning..."
 
 # Concat all of the files together into one file
