@@ -14,7 +14,7 @@ from transformers import PreTrainedTokenizerFast
 
 # Globals
 MAX_TOKENS = 510
-VOCAB_SIZE = 5000
+VOCAB_SIZE = 50000
 MAX_VOCAB_TOKEN_LENGTH = 2000
 
 ## Tokenize sequences given a txt file as input
@@ -34,9 +34,12 @@ Arguments:
 """
 def read_files(bacteria_files, phage_files, method, **kwargs):
   b_out = kwargs.get('b_out', None)
-  p_out = kwargs.get('p_out', b_out)
+  p_out = kwargs.get('p_out', None)
   k = kwargs.get('k', None)
   vocab = kwargs.get('vocab', None)
+
+  if p_out == None:
+    p_out = b_out
 
   # Ensure that input is correct
   if method == 'kmer' and k == None:
@@ -192,12 +195,12 @@ Save the given dataframe to two separate csv files:
 Arguments:
   filename -- str, name of file being tokenized
   df -- dataframe, full dataframe of tokenized sequences
-  output_dir -- str, path to directory for output
+  directory -- str, path to directory for output
 """ 
-def write_csv(filename, df, output_dir):
+def write_csv(filename, df, directory):
   # df.to_csv(directory + "/" + filename + '_full.csv', encoding='utf-8', index=False)
   tokenized = df[['tokenized', 'label']]
-  tokenized.to_csv(output_dir + "/" + filename + '_tokenized.csv', encoding='utf-8', index=False, header=False, sep='\t')
+  tokenized.to_csv(directory + "/" + filename + '_tokenized.csv', encoding='utf-8', index=False, header=False, sep='\t')
     
 
 ## Different tokenization methods
@@ -256,7 +259,7 @@ def build_vocab(vocab):
   # Customize the tokenizer to handle DNA sequences
   tokenizer.normalizer = normalizers.Sequence([normalizers.NFKC()])
   # Train the tokenizer on your DNA sequences
-  trainer = trainers.BpeTrainer(VOCAB_SIZE)
+  trainer = trainers.BpeTrainer(vocab_size=VOCAB_SIZE)
   tokenizer.train_from_iterator(sequences, trainer=trainer)
   tokenizer.save("dna_tokenizer.json")
 
@@ -278,12 +281,7 @@ def parse_vocab(vocab):
         if f.endswith('.gz'):
           f = gzip.open(f, 'rt', encoding='utf-8')
         for record in SeqIO.parse(f, 'fasta'):
-          # Truncate sequences if longer than max_length
-          seq = str(record.seq).upper()
-          while len(seq) > MAX_VOCAB_TOKEN_LENGTH:
-            sequences.append(seq[:MAX_VOCAB_TOKEN_LENGTH])
-            seq = seq[MAX_VOCAB_TOKEN_LENGTH:]  
-          sequences.append(seq)
+          sequences.append(str(record.seq).upper())
   # If the input vocabulary is a list of files
   elif os.path.isfile(vocab):
     with open(vocab, 'r') as list:
@@ -294,12 +292,7 @@ def parse_vocab(vocab):
           if f.endswith('.gz'):
             f = gzip.open(f, 'rt', encoding='utf-8')
           for record in SeqIO.parse(f, 'fasta'):
-            seq = str(record.seq).upper()
-            # Truncate sequences if longer than max_length
-            while len(seq) > MAX_VOCAB_TOKEN_LENGTH:
-              sequences.append(seq[:MAX_VOCAB_TOKEN_LENGTH])
-              seq = seq[MAX_VOCAB_TOKEN_LENGTH:]  
-            sequences.append(seq)
+            sequences.append(str(record.seq).upper())
   return sequences
 
 ## Keep track of files
@@ -310,6 +303,7 @@ if the output filename exists in the output directory and has a size
 greater than 0.
 
 Arguments:
+  directory -- str, the path to the output directory
   filename -- str, the full name of the file to check
 Returns:
   isfile -- bool, whether the file has already been tokenized
@@ -350,7 +344,7 @@ def main():
   args = parser.parse_args()
 
   # Tokenize files
-  read_files(bacteria_dir=args.b, phage_dir=args.p, method=args.method, b_out=args.b_out, p_out=args.p_out, k=args.k, vocab=args.vocab)
+  read_files(bacteria_files=args.b, phage_files=args.p, method=args.method, b_out=args.b_out, p_out=args.p_out, k=args.k, vocab=args.vocab)
 
 if __name__ == "__main__":
     main()
