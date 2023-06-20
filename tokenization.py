@@ -14,8 +14,7 @@ from transformers import PreTrainedTokenizerFast
 
 # Globals
 MAX_TOKENS = 510
-VOCAB_SIZE = 5000
-MAX_VOCAB_TOKEN_LENGTH = 2000
+VOCAB_SIZE = 50000
 
 ## Tokenize sequences given directory input
 
@@ -34,9 +33,12 @@ Arguments:
 """
 def read_files(bacteria_dir, phage_dir, method, **kwargs):
   b_out = kwargs.get('b_out', None)
-  p_out = kwargs.get('p_out', b_out)
+  p_out = kwargs.get('p_out', None)
   k = kwargs.get('k', None)
   vocab = kwargs.get('vocab', None)
+
+  if p_out == None:
+    p_out = b_out
 
   # Ensure that input is correct
   if method == 'kmer' and k == None:
@@ -52,8 +54,7 @@ def read_files(bacteria_dir, phage_dir, method, **kwargs):
   for filename in os.listdir(bacteria_dir):
     f = os.path.join(bacteria_dir, filename)
     if os.path.isfile(f) and not is_file_read(b_out, filename):
-      tokenize(f, 0, method, b_out, k=k)
-      
+      tokenize(f, 0, method, b_out, k=k)     
   # Tokenize all files in phage_dir
     for filename in os.listdir(phage_dir):
       f = os.path.join(phage_dir, filename)
@@ -251,7 +252,7 @@ def build_vocab(vocab):
   # Customize the tokenizer to handle DNA sequences
   tokenizer.normalizer = normalizers.Sequence([normalizers.NFKC()])
   # Train the tokenizer on your DNA sequences
-  trainer = trainers.BpeTrainer(VOCAB_SIZE)
+  trainer = trainers.BpeTrainer(vocab_size=VOCAB_SIZE)
   tokenizer.train_from_iterator(sequences, trainer=trainer)
   tokenizer.save("dna_tokenizer.json")
 
@@ -273,12 +274,7 @@ def parse_vocab(vocab):
         if f.endswith('.gz'):
           f = gzip.open(f, 'rt', encoding='utf-8')
         for record in SeqIO.parse(f, 'fasta'):
-          # Truncate sequences if longer than max_length
-          seq = str(record.seq).upper()
-          while len(seq) > MAX_VOCAB_TOKEN_LENGTH:
-            sequences.append(seq[:MAX_VOCAB_TOKEN_LENGTH])
-            seq = seq[MAX_VOCAB_TOKEN_LENGTH:]  
-          sequences.append(seq)
+          sequences.append(str(record.seq).upper())
   # If the input vocabulary is a list of files
   elif os.path.isfile(vocab):
     with open(vocab, 'r') as list:
@@ -289,12 +285,7 @@ def parse_vocab(vocab):
           if f.endswith('.gz'):
             f = gzip.open(f, 'rt', encoding='utf-8')
           for record in SeqIO.parse(f, 'fasta'):
-            seq = str(record.seq).upper()
-            # Truncate sequences if longer than max_length
-            while len(seq) > MAX_VOCAB_TOKEN_LENGTH:
-              sequences.append(seq[:MAX_VOCAB_TOKEN_LENGTH])
-              seq = seq[MAX_VOCAB_TOKEN_LENGTH:]  
-            sequences.append(seq)
+            sequences.append(str(record.seq).upper())
   return sequences
 
 ## Keep track of files
