@@ -20,19 +20,27 @@ conda list
 SCRIPT_PATH=/uufs/chpc.utah.edu/common/home/u1323098/anisa/SCRIPTS
 
 # Arguments
-BACTERIA_INPUT=/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/BACTERIA/CDS
-PHAGE_INPUT=/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/PHAGE/CDS
-OUTPUT_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA
-METHOD=codon
+BACTERIA_INPUT=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/BPE/bacteria_list.txt
+PHAGE_INPUT=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/BPE/phage_list.txt
+OUTPUT_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/BPE
+METHOD=bpe
 KMER=None
-VOCAB_DIR=None
+VOCAB_INPUT=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/BPE/vocab_list.txt
 
 echo "TIME: Start: = `date +"%Y-%m-%d %T"`"
 cd $SCRIPT_PATH
 pwd
 if [[ $BACTERIA_INPUT == *.txt ]]; then
-    python3 tokenization_list.py --b $BACTERIA_INPUT --p $PHAGE_INPUT --b_out $OUTPUT_DIR --method $METHOD
+    python3 tokenization_list.py --b $BACTERIA_INPUT \
+                                 --p $PHAGE_INPUT \
+                                 --b_out $OUTPUT_DIR \
+                                 --method $METHOD \
+                                 --vocab $VOCAB_INPUT
 else
-    python3 tokenization.py --b $BACTERIA_INPUT --p $PHAGE_INPUT --b_out $OUTPUT_DIR --method $METHOD
+    python3 tokenization.py --b $BACTERIA_INPUT \
+                            --p $PHAGE_INPUT \
+                            --b_out $OUTPUT_DIR \
+                            --method $METHOD \
+                            --vocab $VOCAB_INPUT
 fi
 echo "TIME: End: = `date +"%Y-%m-%d %T"`" 
