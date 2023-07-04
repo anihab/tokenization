@@ -17,15 +17,15 @@ python --version
 which pip
 conda list
 
-SCRIPT_PATH=/uufs/chpc.utah.edu/common/home/u1323098/anisa/SCRIPTS
+SCRIPT_PATH=/ocean/projects/bio230026p/ahabib/SCRIPTS/tokenization
 
 # Arguments
-BACTERIA_INPUT=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/BPE/bacteria_list.txt
-PHAGE_INPUT=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/BPE/phage_list.txt
-OUTPUT_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/BPE
-METHOD=bpe
-KMER=None
-VOCAB_INPUT=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/BPE/vocab_list.txt
+BACTERIA_INPUT=
+PHAGE_INPUT=
+OUTPUT_DIR=
+METHOD=
+KMER=
+VOCAB_INPUT=
 
 echo "TIME: Start: = `date +"%Y-%m-%d %T"`"
 cd $SCRIPT_PATH

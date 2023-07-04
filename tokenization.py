@@ -10,7 +10,7 @@ import numpy as np
 
 from Bio import SeqIO
 from tokenizers import Tokenizer, models, trainers, normalizers
-from transformers import PreTrainedTokenizerFast
+from transformers import PreTrainedTokenizerFast, AutoModel, AutoTokenizer
 
 # Globals
 MAX_TOKENS = 510
@@ -234,7 +234,8 @@ Returns:
   output -- str, decoded tokens separated by a space
 """
 def seq2bpe(sequence):                         
-  tokenizer = PreTrainedTokenizerFast(tokenizer_file="dna_tokenizer.json")
+  #tokenizer = PreTrainedTokenizerFast(tokenizer_file="tokenizer.json")r
+  tokenizer = AutoTokenizer.from_pretrained("tokenizer.json")
   encoded_input = tokenizer(sequence, return_tensors="pt")
   token_ids = encoded_input.input_ids
   output = " ".join(tokenizer.batch_decode(token_ids)) 
@@ -254,7 +255,7 @@ def build_vocab(vocab):
   # Train the tokenizer on your DNA sequences
   trainer = trainers.BpeTrainer(vocab_size=VOCAB_SIZE)
   tokenizer.train_from_iterator(sequences, trainer=trainer)
-  tokenizer.save("dna_tokenizer.json")
+  tokenizer.save("tokenizer.json")
 
 """\
 Parse vocabulary for the BPE model to work with

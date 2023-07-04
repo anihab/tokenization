@@ -18,8 +18,8 @@ which pip
 conda list
 
 # Script and Output paths
-SCRIPT_PATH=/uufs/chpc.utah.edu/common/home/u1323098/anisa/SCRIPTS
-OUTPUT_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/CODON_LARGE
+SCRIPT_PATH=/ocean/projects/bio230026p/ahabib/SCRIPTS/tokenization
+OUTPUT_DIR=
 
 # Get file list
 find /uufs/chpc.utah.edu/common/home/u1323098/sundar-group-space2/PHAGE/DATASETS/BACTERIA_RAW/FASTA/ncbi-genomes-2023-05-25 -type f | shuf -n 500 > $OUTPUT_DIR/bacteria_list.txt

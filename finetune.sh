@@ -17,15 +17,15 @@ python --version
 which pip
 conda list
 
-SCRIPT_PATH=/uufs/chpc.utah.edu/common/home/u1323098/anisa/SCRIPTS
-OUTPUT_DIR=/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/6MER
+SCRIPT_PATH=/ocean/projects/bio230026p/ahabib/SCRIPTS/tokenization
 
 # Arguments
-BACTERIA_INPUT=/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/BACTERIA/FASTA
-PHAGE_INPUT=/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/PHAGE/FASTA
-METHOD=kmer
-KMER=6
-VOCAB_DIR=None
+BACTERIA_INPUT=
+PHAGE_INPUT=
+METHOD=
+KMER=
+VOCAB_DIR=
+OUTPUT_DIR=
 
 # Output Directories
 BACTERIA_OUTPUT=$OUTPUT_DIR/BACTERIA
