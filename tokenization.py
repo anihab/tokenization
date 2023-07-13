@@ -87,21 +87,29 @@ def tokenize(filepath, label, method, output_dir, **kwargs):
     max_length = MAX_TOKENS - (k - 1)
   elif method == 'bpe':
     max_length = None
+  elif method == 'format':
+    max_length = 500
 
   # Process data to get sequences of appropriate length 
   df = preprocess_data(filepath, max_length)
   sequences = df['sequence'].values.tolist()
 
   # Tokenize according to chosen method
-  for seq in range(len(sequences)):
-    if method == 'codon':
-      tokens.append(seq2codon(sequences[seq]))
-    elif method == 'kmer':
-      tokens.append(seq2kmer(sequences[seq], k))
-    elif method == 'bpe':
-      tokens.append(seq2bpe(sequences[seq]))
-  df['tokenized'] = tokens
-  df['label'] = [label] * len(tokens)
+  if method != 'format':
+    for seq in range(len(sequences)):
+      if method == 'codon':
+        tokens.append(seq2codon(sequences[seq]))
+      elif method == 'kmer':
+        tokens.append(seq2kmer(sequences[seq], k))
+      elif method == 'bpe':
+        tokens.append(seq2bpe(sequences[seq]))
+    df['tokenized'] = tokens
+  df['label'] = [label] * len(sequences)
+
+  # If formatting, save to new csv
+  if method == 'format':
+    write_format_csv(filename, df, output_dir)
+    return
   
   # Shuffle and save to csv
   df = df.sample(frac=1).reset_index(drop=True)
@@ -193,8 +201,11 @@ Arguments:
 def write_csv(filename, df, output_dir):
   # df.to_csv(directory + "/" + filename + '_full.csv', encoding='utf-8', index=False)
   tokenized = df[['tokenized', 'label']]
-  tokenized.to_csv(output_dir + "/" + filename + '_tokenized.csv', encoding='utf-8', index=False, header=False, sep='\t')
-    
+  tokenized.to_csv(output_dir + '/' + filename + '_tokenized.csv', encoding='utf-8', index=False, header=False, sep='\t')
+
+def write_format_csv(filename, df, output_dir):
+  formatted = df[['sequence', 'label']]
+  formatted.to_csv(output_dir + '/' + filename + '_formatted.csv', encoding='utf-8', index=False, header=False) 
 
 ## Different tokenization methods
 

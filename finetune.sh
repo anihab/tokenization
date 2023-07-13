@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --account=soc-gpu-np
-#SBATCH --partition=soc-gpu-np
+#SBATCH -N 1
+#SBATCH -p GPU
+#SBATCH -t 2:00:00
 #SBATCH --job-name=tokenization
-#SBATCH --time=1:00:00
-#SBATCH -o /uufs/chpc.utah.edu/common/home/u1323098/TokenizationTest%j.outerror
+#SBATCH --gpus=v100-32:8
+#SBATCH -o /jet/home/ahabib/TokenizationFinetuneTest%j.outerror
 
 # Load Modules 
 module purge
@@ -20,12 +20,13 @@ conda list
 SCRIPT_PATH=/ocean/projects/bio230026p/ahabib/SCRIPTS/tokenization
 
 # Arguments
-BACTERIA_INPUT=
-PHAGE_INPUT=
-METHOD=
-KMER=
-VOCAB_DIR=
-OUTPUT_DIR=
+# Arguments
+BACTERIA_INPUT="/ocean/projects/bio230026p/ahabib/RAW_DATA/BACTERIA"
+PHAGE_INPUT="/ocean/projects/bio230026p/ahabib/RAW_DATA/PHAGE"
+OUTPUT_DIR="/ocean/projects/bio230026p/ahabib/RAW_DATA/formatted"
+METHOD=kmer
+KMER=6
+VOCAB_INPUT=None
 
 # Output Directories
 BACTERIA_OUTPUT=$OUTPUT_DIR/BACTERIA
