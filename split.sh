@@ -1,29 +1,37 @@
 #!/bin/bash
-#SBATCH -N 1
-#SBATCH -p GPU
-#SBATCH -t 2:00:00
-#SBATCH --job-name=split
-#SBATCH --gpus=v100-32:8
+#SBATCH --nodes=1
+#SBATCH --account=soc-gpu-np
+#SBATCH --partition=soc-gpu-np
+#SBATCH --job-name=tokenization
+#SBATCH --time=1:00:00
+#SBATCH -o /uufs/chpc.utah.edu/common/home/u1323098/Split%j.outerror
 
 set -x
 
-module load anaconda3
-echo "starting dna env on conda"
-conda activate dna
+# module load anaconda3
+# echo "starting dna env on conda"
+# conda activate dna
+module purge
+module use $HOME/MyModules
+module load miniconda3/latest
 which python3
 python --version
 which pip
 conda list
 
 # Set the input file path
-input_file="/ocean/projects/bio230026p/ahabib/RAW_DATA/formatted.csv"
+#input_file="/ocean/projects/bio230026p/ahabib/RAW_DATA/formatted.csv"
+input_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/formatted.csv"
 
 echo "TIME: Start: = `date +"%Y-%m-%d %T"`"
 
 # Set the output file paths for train, test, and dev splits
-train_file="/ocean/projects/bio230026p/ahabib/RAW_DATA/train.csv"
-test_file="/ocean/projects/bio230026p/ahabib/RAW_DATA/test.csv"
-dev_file="/ocean/projects/bio230026p/ahabib/RAW_DATA/dev.csv"
+#train_file="/ocean/projects/bio230026p/ahabib/RAW_DATA/train.csv"
+#test_file="/ocean/projects/bio230026p/ahabib/RAW_DATA/test.csv"
+#dev_file="/ocean/projects/bio230026p/ahabib/RAW_DATA/dev.csv"
+train_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/train.csv"
+test_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/test.csv"
+dev_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/dev.csv"
 
 # Set the train-test-dev split ratios
 train_ratio=0.7
@@ -52,6 +60,6 @@ END
 )
 
 # Execute the Python script
-python -c "$python_script"
+python3 -c "$python_script"
 
 echo "TIME: End: = `date +"%Y-%m-%d %T"`" 

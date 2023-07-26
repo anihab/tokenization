@@ -1,3 +1,5 @@
+:: run on bridges-2
+
 #!/bin/bash
 #SBATCH -N 1
 #SBATCH -p GPU

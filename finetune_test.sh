@@ -4,7 +4,7 @@
 #SBATCH --partition=soc-gpu-np
 #SBATCH --job-name=tokenization
 #SBATCH --time=1:00:00
-#SBATCH -o /uufs/chpc.utah.edu/common/home/u1323098/TokenizationTest%j.outerror
+#SBATCH -o /uufs/chpc.utah.edu/common/home/u1323098/TokenizationFinetuneTest%j.outerror
 
 # Load Modules 
 module purge

@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH -N 1
-#SBATCH -p GPU
-#SBATCH -t 2:00:00
+#SBATCH --nodes=1
+#SBATCH --account=soc-gpu-np
+#SBATCH --partition=soc-gpu-np
 #SBATCH --job-name=tokenization
-#SBATCH --gpus=v100-32:8
-#SBATCH -o /jet/home/ahabib/TokenizationTest%j.outerror
+#SBATCH --time=1:00:00
+#SBATCH -o /uufs/chpc.utah.edu/common/home/u1323098/Format%j.outerror
 
 # Load Modules 
 module purge
@@ -16,9 +16,9 @@ python --version
 which pip
 conda list
 
-BACTERIA=$PROJECT/RAW_DATA/BACTERIA/formatted
-PHAGE=$PROJECT/RAW_DATA/PHAGE/formatted
-OUTPUT=$PROJECT/RAW_DATA
+BACTERIA=/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/BACTERIA/formatted
+PHAGE=/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/PHAGE/formatted
+OUTPUT=/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA
 
 echo "TIME: Start: = `date +"%Y-%m-%d %T"`"
 
