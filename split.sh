@@ -20,23 +20,19 @@ which pip
 conda list
 
 # Set the input file path
-#input_file="/ocean/projects/bio230026p/ahabib/RAW_DATA/formatted.csv"
-input_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/formatted.csv"
+input_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SPLIT/formatted.csv"
 
 echo "TIME: Start: = `date +"%Y-%m-%d %T"`"
 
 # Set the output file paths for train, test, and dev splits
-#train_file="/ocean/projects/bio230026p/ahabib/RAW_DATA/train.csv"
-#test_file="/ocean/projects/bio230026p/ahabib/RAW_DATA/test.csv"
-#dev_file="/ocean/projects/bio230026p/ahabib/RAW_DATA/dev.csv"
-train_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/train.csv"
-test_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/test.csv"
-dev_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/dev.csv"
+train_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SPLIT/train.csv"
+test_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SPLIT/test.csv"
+dev_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SPLIT/dev.csv"
 
 # Set the train-test-dev split ratios
-train_ratio=0.7
-test_ratio=0.15
-dev_ratio=0.15
+train_ratio=0.8
+test_ratio=0.1
+dev_ratio=0.1
 
 # Run Python script to perform train-test-dev split
 python_script=$(cat << END
@@ -56,10 +52,23 @@ test_data, dev_data = train_test_split(temp_data, train_size=$test_ratio/($test_
 train_data.to_csv("$train_file", index=False)
 test_data.to_csv("$test_file", index=False)
 dev_data.to_csv("$dev_file", index=False)
+
 END
 )
 
 # Execute the Python script
 python3 -c "$python_script"
+
+# Set the headers for train, test, and dev files
+temp_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SPLIT/temp.csv"
+
+echo "sequence,label" | cat - "$train_file" > "$temp_file"
+mv "$temp_file" "$train_file"
+
+echo "sequence,label" | cat - "$test_file" > "$temp_file"
+mv "$temp_file" "$test_file"
+
+echo "sequence,label" | cat - "$dev_file" > "$temp_file"
+mv "$temp_file" "$dev_file"
 
 echo "TIME: End: = `date +"%Y-%m-%d %T"`" 

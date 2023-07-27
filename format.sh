@@ -16,9 +16,9 @@ python --version
 which pip
 conda list
 
-BACTERIA=/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/BACTERIA/formatted
-PHAGE=/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/PHAGE/formatted
-OUTPUT=/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA
+BACTERIA="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SPLIT/BACTERIA"
+PHAGE="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SPLIT/PHAGE"
+OUTPUT="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SPLIT"
 
 echo "TIME: Start: = `date +"%Y-%m-%d %T"`"
 

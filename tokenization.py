@@ -15,6 +15,7 @@ from transformers import PreTrainedTokenizerFast, AutoModel, AutoTokenizer
 # Globals
 MAX_TOKENS = 510
 VOCAB_SIZE = 50000
+FORMAT_LENGTH = 500
 
 ## Tokenize sequences given directory input
 

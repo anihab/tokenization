@@ -4,17 +4,15 @@
 #SBATCH --partition=soc-gpu-np
 #SBATCH --job-name=dnabert2
 #SBATCH --time=1:00:00
-#SBATCH -o /uufs/chpc.utah.edu/common/home/u1323098/OUT/DNABERT2test%j.outerror
+#SBATCH -o /uufs/chpc.utah.edu/common/home/u1049062/OUT
 
 set -x
 
-# Load Modules 
+# Load Modules
+nvidia-smi 
+module load cuda
 nvidia-smi
-module load cuda/11.7.1
-nvidia-smi
-module load anaconda3/2022.10
 
-echo "starting env on conda"
 module use $HOME/MyModules
 module load miniconda3/latest
 which python3
@@ -22,13 +20,13 @@ python --version
 which pip
 conda list
 
-data_path="/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA"
-output_path="/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/DNABERT2_TEST"
+data_path="/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/SPLIT"
+output_path="/uufs/chpc.utah.edu/common/home/u1323098/anisa/TOKENIZED_DATA/DNABERT2"
 
 echo "The provided data_path is $data_path"
 echo "TIME: Start: = `date +"%Y-%m-%d %T"`"
 
-python /uufs/chpc.utah.edu/common/home/u1323098/anisa/MODELS/DNABERT_2/finetune/train.py \
+python3 /uufs/chpc.utah.edu/common/home/u1323098/anisa/MODELS/DNABERT_2/finetune/train.py \
             --model_name_or_path zhihan1996/DNABERT-2-117M \
             --data_path  $data_path \
             --kmer -1 \
@@ -50,4 +48,4 @@ python /uufs/chpc.utah.edu/common/home/u1323098/anisa/MODELS/DNABERT_2/finetune/
             --log_level info \
             --find_unused_parameters False
 
-echo "TIME: End: = `date +"%Y-%m-%d %T"`"  
+echo "TIME: End: = `date +"%Y-%m-%d %T"`" 

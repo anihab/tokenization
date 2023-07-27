@@ -4,7 +4,7 @@
 #SBATCH -t 2:00:00
 #SBATCH --job-name=tokenization
 #SBATCH --gpus=v100-32:8
-#SBATCH -o /jet/home/ahabib/TokenizationFinetuneTest%j.outerror
+#SBATCH -o /jet/home/ahabib/TokenizationFinetune%j.outerror
 
 # Load Modules 
 module purge
