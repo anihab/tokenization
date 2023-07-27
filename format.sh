@@ -59,9 +59,4 @@ shuf phage_unshuf.csv > phage_shuf.csv
 head -n $SELECT_AMOUNT $OUTPUT/BACTERIA/bacteria_shuf.csv > $OUTPUT/BACTERIA/bacteria_selected.csv
 head -n $SELECT_AMOUNT $OUTPUT/PHAGE/phage_shuf.csv > $OUTPUT/PHAGE/phage_selected.csv
 
-# Concat the bacteria_selected.csv and the phage_selected.csv together and shuffle again
-cd $OUTPUT
-cat  $OUTPUT/BACTERIA/bacteria_selected.csv $OUTPUT/PHAGE/phage_selected.csv > formatted_unshuf.csv
-shuf formatted_unshuf.csv > formatted.csv
-
 echo "TIME: End: = `date +"%Y-%m-%d %T"`"
