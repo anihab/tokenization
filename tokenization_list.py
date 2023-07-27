@@ -15,7 +15,6 @@ from transformers import PreTrainedTokenizerFast
 # Globals
 MAX_TOKENS = 510
 VOCAB_SIZE = 50000
-MAX_VOCAB_TOKEN_LENGTH = 2000
 
 ## Tokenize sequences given a txt file as input
 
@@ -37,6 +36,7 @@ def read_files(bacteria_files, phage_files, method, **kwargs):
   p_out = kwargs.get('p_out', None)
   k = kwargs.get('k', None)
   vocab = kwargs.get('vocab', None)
+  format_length = kwargs.get('format_length', None)
 
   if p_out == None:
     p_out = b_out
@@ -46,6 +46,8 @@ def read_files(bacteria_files, phage_files, method, **kwargs):
     print("Missing argument, kmer tokenization method requires parameter \'k\'.")
   if method == 'bpe' and vocab == None:
     print("Missing argument, bpe tokenization method requires parameter \'vocab\'.")
+  if method == 'format' and format_length == None:
+    print("Missing argument, formatting requires parameter \'format_length\'.")
 
   # Build model vocabulary if using bpe
   if method == 'bpe':
@@ -58,7 +60,7 @@ def read_files(bacteria_files, phage_files, method, **kwargs):
         f = f.strip()
         filename = os.path.basename(f) 
         if os.path.isfile(f) and not is_file_read(b_out, filename):
-          tokenize(f, 0, method, b_out, k=k)
+          tokenize(f, 0, method, b_out, k=k,format_length=format_length)
   # Tokenize all files in phage_files
   if os.path.isfile(phage_files):
     with open(phage_files, 'r') as list:
@@ -66,7 +68,7 @@ def read_files(bacteria_files, phage_files, method, **kwargs):
         f = f.strip()
         filename = os.path.basename(f) 
         if os.path.isfile(f) and not is_file_read(p_out, filename):
-          tokenize(f, 1, method, p_out, k=k)
+          tokenize(f, 1, method, p_out, k=k,format_length=format_length)
 
 """\
 Runs fasta files through tokenizer and adds the label of 1 for phage and
@@ -84,6 +86,7 @@ def tokenize(filepath, label, method, output_dir, **kwargs):
   tokens = []
 
   k = kwargs.get('k', None)
+  format_length = kwargs.get('format_length', None)
   filename = os.path.basename(filepath)
   filename = filename.split('.')[0]
 
@@ -94,21 +97,29 @@ def tokenize(filepath, label, method, output_dir, **kwargs):
     max_length = MAX_TOKENS - (k - 1)
   elif method == 'bpe':
     max_length = None
+  elif method == 'format':
+    max_length = format_length
 
   # Process data to get sequences of appropriate length 
   df = preprocess_data(filepath, max_length)
   sequences = df['sequence'].values.tolist()
 
   # Tokenize according to chosen method
-  for seq in range(len(sequences)):
-    if method == 'codon':
-      tokens.append(seq2codon(sequences[seq]))
-    elif method == 'kmer':
-      tokens.append(seq2kmer(sequences[seq], k))
-    elif method == 'bpe':
-      tokens.append(seq2bpe(sequences[seq]))
-  df['tokenized'] = tokens
-  df['label'] = [label] * len(tokens)
+  if method != 'format':
+    for seq in range(len(sequences)):
+      if method == 'codon':
+        tokens.append(seq2codon(sequences[seq]))
+      elif method == 'kmer':
+        tokens.append(seq2kmer(sequences[seq], k))
+      elif method == 'bpe':
+        tokens.append(seq2bpe(sequences[seq]))
+    df['tokenized'] = tokens
+  df['label'] = [label] * len(sequences)
+
+  # If formatting, save to new csv
+  if method == 'format':
+    write_format_csv(filename, df, output_dir)
+    return
   
   # Shuffle and save to csv
   df = df.sample(frac=1).reset_index(drop=True)
@@ -201,7 +212,19 @@ def write_csv(filename, df, directory):
   # df.to_csv(directory + "/" + filename + '_full.csv', encoding='utf-8', index=False)
   tokenized = df[['tokenized', 'label']]
   tokenized.to_csv(directory + "/" + filename + '_tokenized.csv', encoding='utf-8', index=False, header=False, sep='\t')
-    
+
+"""\
+Save the given dataframe to a _formatted csv file, which includes every
+sequence and corresponding label.
+
+Arguments:
+  filename -- str, name of file being tokenized
+  df -- dataframe, full dataframe of tokenized sequences
+  output_dir -- str, path to directory for output
+"""
+def write_format_csv(filename, df, output_dir):
+  formatted = df[['sequence', 'label']]
+  formatted.to_csv(output_dir + '/' + filename + '_formatted.csv', encoding='utf-8', index=False, header=False)     
 
 ## Different tokenization methods
 
@@ -333,7 +356,7 @@ def main():
         "--p_out", default=None, type=str, required=False, help="The second output directory, for phage if using both."
     )
   parser.add_argument(
-        "--method", default=None, type=str, required=True, help="The tokenization method of choice: kmer, codon, or bpe."
+        "--method", default=None, type=str, required=True, help="The tokenization method of choice: kmer, codon, bpe, or format."
     )
   parser.add_argument(
         "--k", default=None, type=int, required=False, help="Length k for kmer tokenization."
@@ -341,10 +364,13 @@ def main():
   parser.add_argument(
         "--vocab", default=None, type=str, required=False, help="The directory or list of files to build the model vocabulary, if using bpe."
     )
+  parser.add_argument(
+        "--format_length", default=None, type=int, required=False, help="The max sequence length for if using the format method."
+  )
   args = parser.parse_args()
 
   # Tokenize files
-  read_files(bacteria_files=args.b, phage_files=args.p, method=args.method, b_out=args.b_out, p_out=args.p_out, k=args.k, vocab=args.vocab)
+  read_files(bacteria_files=args.b, phage_files=args.p, method=args.method, b_out=args.b_out, p_out=args.p_out, k=args.k, vocab=args.vocab, format_length=args.format_length)
 
 if __name__ == "__main__":
     main()

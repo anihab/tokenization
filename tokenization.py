@@ -15,7 +15,6 @@ from transformers import PreTrainedTokenizerFast, AutoModel, AutoTokenizer
 # Globals
 MAX_TOKENS = 510
 VOCAB_SIZE = 50000
-FORMAT_LENGTH = 500
 
 ## Tokenize sequences given directory input
 
@@ -31,12 +30,14 @@ Arguments:
   p_out -- str, path to directory for phage ouput
   k -- int, length of k if using kmer tokenization
   vocab -- str, path to directory of fasta files to build model vocab
+  format_length -- int, choice of max sequence length if formatting
 """
 def read_files(bacteria_dir, phage_dir, method, **kwargs):
   b_out = kwargs.get('b_out', None)
   p_out = kwargs.get('p_out', None)
   k = kwargs.get('k', None)
   vocab = kwargs.get('vocab', None)
+  format_length = kwargs.get('format_length', None)
 
   if p_out == None:
     p_out = b_out
@@ -46,6 +47,8 @@ def read_files(bacteria_dir, phage_dir, method, **kwargs):
     print("Missing argument, kmer tokenization method requires parameter \'k\'.")
   if method == 'bpe' and vocab == None:
     print("Missing argument, bpe tokenization method requires parameter \'vocab\'.")
+  if method == 'format' and format_length == None:
+    print("Missing argument, formatting requires parameter \'format_length\'.")
 
   # Build model vocabulary if using bpe
   if method == 'bpe':
@@ -55,12 +58,12 @@ def read_files(bacteria_dir, phage_dir, method, **kwargs):
   for filename in os.listdir(bacteria_dir):
     f = os.path.join(bacteria_dir, filename)
     if os.path.isfile(f) and not is_file_read(b_out, filename):
-      tokenize(f, 0, method, b_out, k=k)     
+      tokenize(f, 0, method, b_out, k=k, format_length=format_length)     
   # Tokenize all files in phage_dir
     for filename in os.listdir(phage_dir):
       f = os.path.join(phage_dir, filename)
       if os.path.isfile(f) and not is_file_read(p_out, filename):
-        tokenize(f, 1, method, p_out, k=k)
+        tokenize(f, 1, method, p_out, k=k, format_length=format_length)
 
 """\
 Runs fasta files through tokenizer and adds the label of 1 for phage and
@@ -78,6 +81,7 @@ def tokenize(filepath, label, method, output_dir, **kwargs):
   tokens = []
 
   k = kwargs.get('k', None)
+  format_length = kwargs.get('format_length', None)
   filename = os.path.basename(filepath)
   filename = filename.split('.')[0]
 
@@ -89,7 +93,7 @@ def tokenize(filepath, label, method, output_dir, **kwargs):
   elif method == 'bpe':
     max_length = None
   elif method == 'format':
-    max_length = 500
+    max_length = format_length
 
   # Process data to get sequences of appropriate length 
   df = preprocess_data(filepath, max_length)
@@ -204,6 +208,15 @@ def write_csv(filename, df, output_dir):
   tokenized = df[['tokenized', 'label']]
   tokenized.to_csv(output_dir + '/' + filename + '_tokenized.csv', encoding='utf-8', index=False, header=False, sep='\t')
 
+"""\
+Save the given dataframe to a _formatted csv file, which includes every
+sequence and corresponding label.
+
+Arguments:
+  filename -- str, name of file being tokenized
+  df -- dataframe, full dataframe of tokenized sequences
+  output_dir -- str, path to directory for output
+"""
 def write_format_csv(filename, df, output_dir):
   formatted = df[['sequence', 'label']]
   formatted.to_csv(output_dir + '/' + filename + '_formatted.csv', encoding='utf-8', index=False, header=False) 
@@ -338,18 +351,21 @@ def main():
         "--p_out", default=None, type=str, required=False, help="The second output directory, for phage if using both."
     )
   parser.add_argument(
-        "--method", default=None, type=str, required=True, help="The tokenization method of choice: kmer, codon, or bpe."
+        "--method", default=None, type=str, required=True, help="The tokenization method of choice: kmer, codon, bpe, or format."
     )
   parser.add_argument(
         "--k", default=None, type=int, required=False, help="Length k for kmer tokenization."
     )
   parser.add_argument(
-        "--vocab", default=None, type=str, required=False, help="The directory or list of files to build the model vocabulary, if using bpe."
+        "--vocab", default=None, type=str, required=False, help="The directory or list of files to build the model vocabulary for if using the bpe method."
     )
+  parser.add_argument(
+        "--format_length", default=None, type=int, required=False, help="The max sequence length for if using the format method."
+  )
   args = parser.parse_args()
 
   # Tokenize files
-  read_files(bacteria_dir=args.b, phage_dir=args.p, method=args.method, b_out=args.b_out, p_out=args.p_out, k=args.k, vocab=args.vocab)
+  read_files(bacteria_dir=args.b, phage_dir=args.p, method=args.method, b_out=args.b_out, p_out=args.p_out, k=args.k, vocab=args.vocab, format_length=args.format_length)
 
 if __name__ == "__main__":
     main()
