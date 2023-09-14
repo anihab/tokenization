@@ -362,6 +362,9 @@ def main():
   parser.add_argument(
         "--format_length", default=None, type=int, required=False, help="The max sequence length for if using the format method."
   )
+  parser.add_argument(
+        "--random_sampling", default=None, type=bool, required=False, help="when true the start locations of sequences will be random and selected sequences may overlap, for if using the format method"
+  )
   args = parser.parse_args()
 
   # Tokenize files
