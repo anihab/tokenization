@@ -11,16 +11,17 @@ python --version
 which pip
 conda list
 
+SCRIPT_PATH="/uufs/chpc.utah.edu/common/home/u1323098/anisa/SCRIPTS/tokenization"
+
 # Locations
 # NOTE: This script assumes you have an output directory set-up with BACTERIA and PHAGE sub-folders
-#       OUTPUT_DIR 
+#       OUTPUT_DIR ls 
 #           BACTERIA
 #           PHAGE
-BACTERIA="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SPLIT/BACTERIA/bacteria_list.txt"
-PHAGE="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SPLIT/PHAGE/phage_list.txt"
-OUTPUT="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SPLIT"
+BACTERIA="/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/BACTERIA"
+PHAGE="/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/PHAGE"
+OUTPUT="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/TOKENIZED_DATA/test"
 
-SCRIPT_PATH="/uufs/chpc.utah.edu/common/home/u1323098/anisa/SCRIPTS/tokenization"
 FORMAT_LENGTH=500       # maximum sequence length for when parsing
 SELECT_AMOUNT=12000     # number of bacteria and phage samples to respectively select for final csv
 

@@ -12,13 +12,13 @@ which pip
 conda list
 
 # Set the input file paths
-bacteria_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SPLIT/BACTERIA/bacteria_selected.csv"
-phage_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SPLIT/PHAGE/phage_selected.csv"
+bacteria_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SHIFT/BACTERIA/bacteria_selected.csv"
+phage_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SHIFT/PHAGE/phage_selected.csv"
 
 echo "TIME: Start: = `date +"%Y-%m-%d %T"`"
 
 # Set the output file paths for train, test, and dev splits
-output_path="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SPLIT"
+output_path="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SHIFT"
 train_file="$output_path/train.csv"
 test_file="$output_path/test.csv"
 dev_file="$output_path/dev.csv"
@@ -89,7 +89,8 @@ cat bacteria_test.csv phage_test.csv | shuf > "$test_file"
 cat bacteria_dev.csv phage_dev.csv | shuf > "$dev_file"
 
 # Set the headers for train, test, and dev files
-temp_file="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SPLIT/temp.csv"
+touch $output_path/temp.csv
+temp_file=$output_path/temp.csv
 
 echo "sequence,label" | cat - "$train_file" > "$temp_file"
 mv "$temp_file" "$train_file"
