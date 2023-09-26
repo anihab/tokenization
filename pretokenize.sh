@@ -17,8 +17,8 @@ BACTERIA="/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/SHIFT/BACTERIA
 PHAGE="/uufs/chpc.utah.edu/common/home/u1323098/anisa/RAW_DATA/SHIFT/PHAGE"
 OUTPUT="/uufs/chpc.utah.edu/common/home/sundar-group2/ANISA/RAW_DATA/SHIFT"
 
-MAX_LENGTH=10          # maximum sequence length for when parsing
-SHIFT_AMOUNT=5
+MAX_LENGTH=500          # maximum sequence length for when parsing
+SHIFT_AMOUNT=100
 RANDOM=False
 SELECT_AMOUNT=12000     # number of bacteria and phage samples to respectively select for final csv
 
