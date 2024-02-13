@@ -4,7 +4,12 @@ This repository includes Colab notebooks for building and running a Bacterial DN
 
 ### Generate Random Samples
 
-**randomSamples.ipynb** generates a set of random samples and processes files.
+**randomSamples.ipynb** generates a set of random samples and processes files in parallel.
+
+Must define bacteria and phage:
+- input and output directories
+- coverage ratio
+- minimum and maximum sequence lengths
 
 ### Build Vocabulary
 
